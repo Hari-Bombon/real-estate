@@ -1,0 +1,22 @@
+
+// Firestore rules
+
+rules_version ='2';
+service cloud.firestore {
+    match /database/{database}/documents {
+        // Listings
+        match/listings/{listings} {
+            allow read;
+            allow create: if request.auth !=null && request.resource.data.imgUrls.size() < 7;
+            allow delete: if resource.data.userRef == request.auth.uid;
+            allow update: if resource.data.userRef == request.auth.uid;
+        }
+
+        //users
+        match / users/{users}{
+            allow read;
+            allow create;
+            allow update: if request.auth.uid ==user
+        }
+    }
+}

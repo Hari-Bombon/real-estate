@@ -2,21 +2,64 @@ import { useState } from "react";
 import {AiFillEyeInvisible ,AiFillEye} from "react-icons/ai"
 import { Link } from "react-router-dom";
 import OAuth from "../components/OAuth";
+import {getAuth , createUserWithEmailAndPassword,updataProfile, updateProfile} from "firebase/auth"
+import {db} from "../firebase";
+import { serverTimestamp } from "firebase/firestore";
+import {useNavigate} from "react-router-dom";
+import {ToastContainer, toast} from "react-toastify";
 
 export default function SignUp() {
   const[showPassword, setShowPassword] = useState(false);
+  const[doc, setDoc] = useState();
   const [formData, setFormData] =useState({
     name:"",
     email:"",
     password:"",
   });
+  const notify = () => toast.success("Vannakkam da mapla!",{
+    position: "top-center",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "dark",
+    });
+   
   const { name,email, password } = formData;
+  const navigate = useNavigate()
   function onChange(e){
   setFormData((prevState)=>({
     ...prevState,
     [e.target.id]:e.target.value,
   
   }));
+}
+  async function onSubmit(e) {
+    e.preventDefault();
+
+    try{
+      const auth = getAuth()
+      const userCredential = await
+      createUserWithEmailAndPassword
+      (auth, email, password);
+      updateProfile(auth.currentUser , {
+        displayName: name
+      })
+      const user = userCredential.user;
+      const formDataCopy ={...formData}
+      delete formDataCopy.password
+      formDataCopy.timestamp = serverTimestamp();
+
+      await setDoc(doc(db, "users", user.uid),formDataCopy)
+      toast.success("Sign up was success")
+      navigate("/")
+    } catch (error) {
+      toast.error("Something went wrong with registration")
+
+    }
+
   }
   return (
    <section>
@@ -27,8 +70,8 @@ export default function SignUp() {
          alt="key"
          className="w-full rounded-2xl"/>
       </div>
-      <div>        
-        <form  className="w-full md:w-[127%] lg:w-[%] lg:ml-20">
+      <div className="w-full md:w-[127%] lg:w-[%] lg:ml-20">        
+        {/* <form Onsubmit={onsubmit}> */}
         <input 
         type="text"
         id="name"
@@ -69,7 +112,7 @@ export default function SignUp() {
              transition duration-200 ease-in-out ml-1">Forgot password?</Link>
           </p>
         </div>
-        <button className="w-full bg-blue-600 text-white px-7 py-3 
+        <button onClick={notify} className="w-full bg-blue-600 text-white px-7 py-3 
         text-sm font-medium uppercase rounded shadow-md hover:bg-blue-700 
         transition duration-150 ease-in-out hover:shadow-lg active:bg-blue-800"
         type="submit">Sign Up</button>
@@ -83,7 +126,7 @@ export default function SignUp() {
           <p className="text-center font-semibold text mx-4">OR</p>
         </div>
         <OAuth />
-        </form>
+        {/* </form> */}
         </div>
         </div>
    </section>
